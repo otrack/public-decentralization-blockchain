@@ -1,0 +1,23 @@
+// The message of the practical, in Protocol Buffers.
+//
+// The Go code in mempool.pb.go is generated from this file; do not edit it.
+// To regenerate it after a change here (section 10):
+//
+//	protoc --go_out=. --go_opt=paths=source_relative mempool.proto
+
+syntax = "proto3";
+
+package mempool;
+
+option go_package = "./;main"; // package main, in this directory
+
+// Transfer is the content of a transaction of the bank application
+// (app.go): move amount units from one account to another. The mempool
+// never looks inside a transaction; for it, a transaction is a sequence
+// of bytes, the encoding of a Transfer. These bytes are also what the
+// nodes send to each other (peer.go).
+message Transfer {
+  string from = 1;
+  string to = 2;
+  uint64 amount = 3;
+}

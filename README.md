@@ -17,7 +17,7 @@ In particular, the following topics are covered:
 
 1. [Introduction](lectures/lecture1.pdf)
 2. [Data dissemination and mempool](lectures/lecture2.pdf)
-3. Consensus, FLP, and Paxos
+3. [Consensus, FLP, and Paxos](lectures/lecture3.pdf)
 4. Byzantine failures
 5. Replicated state machines
 6. Distributed ledgers
@@ -34,5 +34,11 @@ In particular, the following topics are covered:
 3. Spending without agreeing using the fast path of Mysticeti
 4. Decentralized votes, treasuries, and attacks
 5. The (local-first) Bachelor Party
+
+## Exercises
+
+Paper-and-pen exercises, for the sessions that are not a practical.
+
+3. [Consensus, FLP, and Paxos](exercices/lecture3.pdf)
 
 The practicals (programming) are in `practicals/`, and the paper-and-pen exercises in `exercices/`.

@@ -18,7 +18,7 @@ In particular, the following topics are covered:
 1. [Introduction](lectures/lecture1.pdf)
 2. [Data dissemination and mempool](lectures/lecture2.pdf)
 3. [Consensus, FLP, and Paxos](lectures/lecture3.pdf)
-4. Byzantine failures
+4. [Byzantine failures](lectures/lecture4.pdf)
 5. Replicated state machines
 6. Distributed ledgers
 7. Digital wallets, smart contracts and privacy
@@ -40,5 +40,6 @@ In particular, the following topics are covered:
 Paper-and-pen exercises, for the sessions that are not a practical.
 
 3. [Consensus, FLP, and Paxos](exercices/lecture3.pdf)
+4. [Byzantine failures](exercices/lecture4.pdf)
 
 The practicals (programming) are in `practicals/`, and the paper-and-pen exercises in `exercices/`.

@@ -19,7 +19,7 @@ In particular, the following topics are covered:
 2. [Data dissemination and mempool](lectures/lecture2.pdf)
 3. [Consensus, FLP, and Paxos](lectures/lecture3.pdf)
 4. [Byzantine failures](lectures/lecture4.pdf)
-5. Replicated state machines
+5. [Replicated state machines](lectures/lecture5.pdf)
 6. Distributed ledgers
 7. Digital wallets, smart contracts and privacy
 8. Decentralized finance and cryptocurrencies
@@ -31,7 +31,7 @@ In particular, the following topics are covered:
 
 1. [Merkle trees — proving one thing without showing everything](practicals/merkle/)
 2. [The waiting room of a blockchain](practicals/mempool/)
-3. Spending without agreeing using the fast path of Mysticeti
+3. [Spending without agreeing using the fast path of Mysticeti](practicals/dag/)
 4. Decentralized votes, treasuries, and attacks
 5. The (local-first) Bachelor Party
 

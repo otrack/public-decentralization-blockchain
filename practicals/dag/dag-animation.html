@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The uncertified DAG, step by step</title>
+<style>
+  :root { --bg:#fff; --fg:#1b1b1b; --muted:#777; --blue:#2a52be; --orange:#d9822b; --box:#f3f5fb; --line:#9aa3b5; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1c1d22; --fg:#e8e8ea; --muted:#9a9aa3; --blue:#7f9cf5; --orange:#f0a050; --box:#2a2c35; --line:#6b7388; }
+  }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:15px/1.45 system-ui, sans-serif; max-width:820px; margin-inline:auto; }
+  h1 { font-size:1.2rem; margin:0 0 .3rem; }
+  .controls { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:.6rem 0; }
+  button { font:inherit; padding:4px 12px; border:1px solid var(--line); background:var(--box); color:var(--fg); border-radius:6px; cursor:pointer; }
+  button:disabled { opacity:.4; cursor:default; }
+  #caption { min-height:4.6em; padding:8px 12px; background:var(--box); border-left:4px solid var(--blue); border-radius:4px; }
+  svg { width:100%; height:auto; display:block; }
+  .lane { stroke:var(--line); stroke-dasharray:3 4; }
+  .blk { fill:var(--box); stroke:var(--blue); stroke-width:1.6; }
+  .blk.slow { stroke:var(--muted); stroke-dasharray:4 3; }
+  .blk.hot { stroke:var(--orange); stroke-width:3; }
+  .edge { stroke:var(--line); stroke-width:1.4; fill:none; marker-end:url(#arrow); }
+  text { fill:var(--fg); font-size:12px; }
+  .tag { fill:var(--blue); font-weight:600; }
+  .hotText { fill:var(--orange); font-weight:700; }
+  .muted { fill:var(--muted); }
+</style>
+</head>
+<body>
+<h1>The uncertified DAG, step by step</h1>
+<p>Four validators, <code>f = 1</code>, a quorum is <code>3</code> blocks. Each block points to a quorum of blocks of the previous round (one of them is the author's own).</p>
+<div class="controls">
+  <button id="prev">&larr; previous</button>
+  <button id="next">next &rarr;</button>
+  <button id="play">play</button>
+  <label><input type="checkbox" id="slow"> validator 3 is slow (its blocks arrive late)</label>
+</div>
+<svg id="svg" viewBox="0 0 740 330" role="img" aria-label="DAG of blocks over rounds 0 to 3">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9aa3b5"/>
+    </marker>
+  </defs>
+  <g id="g"></g>
+</svg>
+<div id="caption"></div>
+
+<script>
+const N = 4, QUORUM = 3, ROUNDS = 3;
+const X = r => 90 + r * 175, Y = v => 55 + v * 75;
+const CAPTIONS = [
+  "Round 0: the <b>genesis</b> blocks. Each validator starts with the genesis block of everybody: they carry nothing and have no parent. They are the common root of the DAG.",
+  "Round 1: each validator builds a block that points to a quorum of round-0 blocks, its own included. Validator 0 puts the transaction <b>T</b> (alice pays 10 to bob) in its block.",
+  "Round 2: a block points to a quorum of round-1 blocks. Validators 1, 2 (and 3) see T <i>below</i> the blocks they point to, so they state their opinion on it in the block they were building anyway: <b>accept T</b>. A vote costs no extra message.",
+  "Round 3: validator 0 receives the round-2 blocks. It counts the <b>distinct</b> validators that accepted T: a quorum. T is <b>certified</b>, after two rounds, and nobody ordered anything."
+];
+let step = 0, timer = null;
+
+function slow() { return document.getElementById('slow').checked; }
+// the parents of the block (v, r): the round r-1 blocks that v sees, its own included.
+// When validator 3 is slow, the others do not see its blocks (and still have a quorum).
+function parents(v, r) {
+  if (r === 0) return [];
+  return [0, 1, 2, 3].filter(u => u === v || !(slow() && u === 3));
+}
+
+function draw() {
+  const g = document.getElementById('g'); let s = '';
+  for (let v = 0; v < N; v++) {
+    s += `<line class="lane" x1="40" x2="730" y1="${Y(v)}" y2="${Y(v)}"/>`;
+    s += `<text x="4" y="${Y(v)+4}" class="muted">V${v}</text>`;
+  }
+  for (let r = 0; r <= ROUNDS; r++) if (r <= step)
+    s += `<text x="${X(r)-30}" y="18" class="muted">round ${r}</text>`;
+  // edges first
+  for (let r = 1; r <= Math.min(step, ROUNDS); r++) for (let v = 0; v < N; v++) {
+    if (r === 3 && v !== 0) continue;
+    for (const p of parents(v, r)) {
+      const x1 = X(r) - 28, y1 = Y(v), x2 = X(r-1) + 28, y2 = Y(p);
+      s += `<path class="edge" d="M${x1},${y1} L${x2},${y2}"/>`;
+    }
+  }
+  for (let r = 0; r <= ROUNDS; r++) if (r <= step) for (let v = 0; v < N; v++) {
+    if (r === 3 && v !== 0) continue;
+    const isSlow = slow() && v === 3 && r > 0;
+    const hot = step === 3 && r === 3;
+    s += `<rect class="blk ${isSlow ? 'slow' : ''} ${hot ? 'hot' : ''}" x="${X(r)-28}" y="${Y(v)-22}" width="56" height="44" rx="6"/>`;
+    s += `<text x="${X(r)}" y="${Y(v)-6}" text-anchor="middle">B${v}.${r}</text>`;
+    if (r === 1 && v === 0 && step >= 1) s += `<text x="${X(r)}" y="${Y(v)+10}" text-anchor="middle" class="tag">T</text>`;
+    if (r === 2 && step >= 2 && !(slow() && v === 3)) s += `<text x="${X(r)}" y="${Y(v)+10}" text-anchor="middle" class="tag">accept T</text>`;
+    if (hot) s += `<text x="${X(r)}" y="${Y(v)+10}" text-anchor="middle" class="hotText">certified</text>`;
+  }
+  if (step === 3) {
+    const n = slow() ? 3 : 4;
+    s += `<text x="${X(3)}" y="${Y(0)+38}" text-anchor="middle" class="hotText">${n} accepts of T</text>`;
+    s += `<text x="${X(3)}" y="${Y(0)+52}" text-anchor="middle" class="hotText">&ge; quorum (3)</text>`;
+  }
+  g.innerHTML = s;
+  document.getElementById('caption').innerHTML = CAPTIONS[step] +
+    (slow() && step >= 1 ? "<br><i>Validator 3 is slow: nobody waits for it, a quorum of three is enough.</i>" : "");
+  document.getElementById('prev').disabled = step === 0;
+  document.getElementById('next').disabled = step === ROUNDS;
+}
+document.getElementById('prev').onclick = () => { stop(); step = Math.max(0, step - 1); draw(); };
+document.getElementById('next').onclick = () => { stop(); step = Math.min(ROUNDS, step + 1); draw(); };
+document.getElementById('slow').onchange = draw;
+function stop() { if (timer) { clearInterval(timer); timer = null; document.getElementById('play').textContent = 'play'; } }
+document.getElementById('play').onclick = () => {
+  if (timer) { stop(); return; }
+  step = 0; draw();
+  document.getElementById('play').textContent = 'stop';
+  timer = setInterval(() => { if (step < ROUNDS) { step++; draw(); } else stop(); }, 2200);
+};
+draw();
+</script>
+</body>
+</html>
